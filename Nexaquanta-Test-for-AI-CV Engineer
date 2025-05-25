@@ -1,0 +1,334 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "35fca601",
+   "metadata": {
+    "_cell_guid": "b1076dfc-b9ad-4769-8c92-a6c4dae69d19",
+    "_uuid": "8f2839f25d086af736a60e9eeb907d3b93b6e0e5",
+    "execution": {
+     "iopub.execute_input": "2025-05-25T14:26:40.704233Z",
+     "iopub.status.busy": "2025-05-25T14:26:40.703889Z",
+     "iopub.status.idle": "2025-05-25T14:26:43.034940Z",
+     "shell.execute_reply": "2025-05-25T14:26:43.034029Z"
+    },
+    "papermill": {
+     "duration": 2.33675,
+     "end_time": "2025-05-25T14:26:43.036681",
+     "exception": false,
+     "start_time": "2025-05-25T14:26:40.699931",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# This Python 3 environment comes with many helpful analytics libraries installed\n",
+    "# It is defined by the kaggle/python Docker image: https://github.com/kaggle/docker-python\n",
+    "# For example, here's several helpful packages to load\n",
+    "\n",
+    "import numpy as np # linear algebra\n",
+    "import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)\n",
+    "\n",
+    "# Input data files are available in the read-only \"../input/\" directory\n",
+    "# For example, running this (by clicking run or pressing Shift+Enter) will list all files under the input directory\n",
+    "\n",
+    "import os\n",
+    "for dirname, _, filenames in os.walk('/kaggle/input'):\n",
+    "    for filename in filenames:\n",
+    "        print(os.path.join(dirname, filename))\n",
+    "\n",
+    "# You can write up to 20GB to the current directory (/kaggle/working/) that gets preserved as output when you create a version using \"Save & Run All\" \n",
+    "# You can also write temporary files to /kaggle/temp/, but they won't be saved outside of the current session"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "38dcd35a",
+   "metadata": {
+    "papermill": {
+     "duration": 0.00201,
+     "end_time": "2025-05-25T14:26:43.041283",
+     "exception": false,
+     "start_time": "2025-05-25T14:26:43.039273",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "## ✅ Problem 1 Overview\n",
+    "\n",
+    "### 📌 Task  \n",
+    "Given a string of digits from `'2'` to `'9'`, generate all possible letter combinations it could represent (like on a phone keypad).\n",
+    "\n",
+    "---\n",
+    "\n",
+    "### ➕ Example Inputs and Outputs\n",
+    "\n",
+    "- **Input:** `\"23\"`  \n",
+    "  **Output:** `[\"ad\", \"ae\", \"af\", \"bd\", \"be\", \"bf\", \"cd\", \"ce\", \"cf\"]`\n",
+    "\n",
+    "- **Input:** `\"\"`  \n",
+    "  **Output:** `[]`\n",
+    "\n",
+    "- **Input:** `\"2\"`  \n",
+    "  **Output:** `[\"a\", \"b\", \"c\"]`\n",
+    "\n",
+    "---\n",
+    "\n",
+    "### 📏 Constraints\n",
+    "\n",
+    "- `0 <= digits.length <= 4`\n",
+    "- Each `digit[i]` is a character in the range `'2'` to `'9'`\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "1abef1a7",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-05-25T14:26:43.046657Z",
+     "iopub.status.busy": "2025-05-25T14:26:43.046252Z",
+     "iopub.status.idle": "2025-05-25T14:26:43.054189Z",
+     "shell.execute_reply": "2025-05-25T14:26:43.053251Z"
+    },
+    "papermill": {
+     "duration": 0.012378,
+     "end_time": "2025-05-25T14:26:43.055714",
+     "exception": false,
+     "start_time": "2025-05-25T14:26:43.043336",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "from typing import List\n",
+    "def letter_combinations(digits: str) -> List[str]:\n",
+    "    \"\"\"\n",
+    "    Generate all possible letter combinations from a digit string using \n",
+    "    telepone button mapping (digits only 2-9) \n",
+    "\n",
+    "    :param digits: A string containing digits from '2' to '9'.\n",
+    "    :return: A list of of all valid letter combinations that the input could represent.\n",
+    "    \"\"\"\n",
+    "    \n",
+    "    # cornor case\n",
+    "    if not digits:\n",
+    "        return []\n",
+    "        \n",
+    "    # mapping digits to letters\n",
+    "    phone_map = {\n",
+    "        \"2\": \"abc\", \"3\": \"def\",  \"4\": \"ghi\", \"5\": \"jkl\",\n",
+    "        \"6\": \"mno\", \"7\": \"pqrs\", \"8\": \"tuv\", \"9\": \"wxyz\"\n",
+    "    }\n",
+    "\n",
+    "    # check input constraints\n",
+    "    if any(d not in phone_map for d in digits):\n",
+    "        raise ValueError(\"Input digits must be in the range '2' to '9' only.\")\n",
+    "\n",
+    "    result = []\n",
+    "    # Recursive backtracking function to build combinations\n",
+    "    def backtrack(index, next_digits):\n",
+    "        # No more digits \n",
+    "        if index == len(digits):\n",
+    "            result.append(next_digits)\n",
+    "            return # Stop further recursion for this branch \n",
+    "        \n",
+    "        # Get letters for current digit\n",
+    "        possible_letters = phone_map[digits[index]]\n",
+    "        for letter in possible_letters:\n",
+    "            backtrack(index+1, next_digits+letter)\n",
+    "\n",
+    "    # start the backtracking\n",
+    "    backtrack(0, \"\")\n",
+    "    return result\n",
+    "        \n",
+    "    "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "1d00fc36",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-05-25T14:26:43.061357Z",
+     "iopub.status.busy": "2025-05-25T14:26:43.061063Z",
+     "iopub.status.idle": "2025-05-25T14:26:43.067400Z",
+     "shell.execute_reply": "2025-05-25T14:26:43.066433Z"
+    },
+    "papermill": {
+     "duration": 0.011009,
+     "end_time": "2025-05-25T14:26:43.068989",
+     "exception": false,
+     "start_time": "2025-05-25T14:26:43.057980",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Test 1: ['ad', 'ae', 'af', 'bd', 'be', 'bf', 'cd', 'ce', 'cf']\n",
+      "Test 2: []\n",
+      "Test 3: ['a', 'b', 'c']\n",
+      "Test 4 (Expected Error): Input digits must be in the range '2' to '9' only.\n",
+      "Test 5: ['adg', 'adh', 'adi', 'aeg', 'aeh', 'aei', 'afg', 'afh', 'afi', 'bdg', 'bdh', 'bdi', 'beg', 'beh', 'bei', 'bfg', 'bfh', 'bfi', 'cdg', 'cdh', 'cdi', 'ceg', 'ceh', 'cei', 'cfg', 'cfh', 'cfi']\n"
+     ]
+    }
+   ],
+   "source": [
+    "#### Testing ####\n",
+    "# Test case 1\n",
+    "print(\"Test 1:\", letter_combinations(\"23\"))\n",
+    "# Expected: [\"ad\", \"ae\", \"af\", \"bd\", \"be\", \"bf\", \"cd\", \"ce\", \"cf\"]\n",
+    "\n",
+    "# Test case 2\n",
+    "print(\"Test 2:\", letter_combinations(\"\"))\n",
+    "# Expected: []\n",
+    "\n",
+    "# Test case 3\n",
+    "print(\"Test 3:\", letter_combinations(\"2\"))\n",
+    "# Expected: [\"a\", \"b\", \"c\"]\n",
+    "\n",
+    "# Test case 4 (edge case: invalid digit)\n",
+    "try:\n",
+    "    print(\"Test 4:\", letter_combinations(\"1\"))\n",
+    "except ValueError as e:\n",
+    "    print(\"Test 4 (Expected Error):\", e)\n",
+    "\n",
+    "# Test case 5 (edge case: maximum input length)\n",
+    "print(\"Test 5:\", letter_combinations(\"234\"))\n",
+    "# Should return 27 combinations (3x3x3)\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "097f74b6",
+   "metadata": {
+    "papermill": {
+     "duration": 0.001883,
+     "end_time": "2025-05-25T14:26:43.073245",
+     "exception": false,
+     "start_time": "2025-05-25T14:26:43.071362",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "## ✅ Problem 2 Overview\n",
+    "\n",
+    "### 📌 Task  \n",
+    "Given two tables — `Customer` and `Product` — return the `customer_id`s of customers who bought **all** the products listed in the `Product` table.\n",
+    "\n",
+    "---\n",
+    "\n",
+    "### 📂 Tables\n",
+    "\n",
+    "#### 🧾 Customer Table\n",
+    "| Column Name | Type |\n",
+    "|-------------|------|\n",
+    "| customer_id | int  |\n",
+    "| product_key | int  |\n",
+    "\n",
+    "- May contain **duplicate rows**.\n",
+    "- `product_key` is a **foreign key** referencing the `Product` table.\n",
+    "\n",
+    "#### 🧾 Product Table\n",
+    "| Column Name | Type |\n",
+    "|-------------|------|\n",
+    "| product_key | int  |\n",
+    "\n",
+    "- `product_key` is the **primary key** in this table.\n",
+    "\n",
+    "---\n",
+    "\n",
+    "### 🎯 Objective \n",
+    "Identify all `customer_id` who have purches **every product** in the `Product` Table.\n",
+    "\n",
+    "---\n",
+    "\n",
+    "### ✔️ SQL Solution\n",
+    "\n",
+    "\n",
+    "```sql\n",
+    "SELECT customer_id\n",
+    "FROM Customer\n",
+    "Group By customer_id\n",
+    "HAVING COUNT(DISTINCT product_key) == (SELECT COUNT(*) FROM Product);\n",
+    "```\n",
+    "\n",
+    "---\n",
+    "\n",
+    "### ✅ Explanation\n",
+    "* `COUNT(DISTINCT product_key)` counts how many unique product each customer bought.\n",
+    "* `(SELECT COUNT(*) FROM Product)` gets the total number of product available.\n",
+    "* We only return `customer_id`s where the count match --- meaning they bought all the products"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "3f47ead8",
+   "metadata": {
+    "papermill": {
+     "duration": 0.001872,
+     "end_time": "2025-05-25T14:26:43.077134",
+     "exception": false,
+     "start_time": "2025-05-25T14:26:43.075262",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kaggle": {
+   "accelerator": "none",
+   "dataSources": [],
+   "dockerImageVersionId": 31040,
+   "isGpuEnabled": false,
+   "isInternetEnabled": true,
+   "language": "python",
+   "sourceType": "notebook"
+  },
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.11.11"
+  },
+  "papermill": {
+   "default_parameters": {},
+   "duration": 8.783575,
+   "end_time": "2025-05-25T14:26:43.597659",
+   "environment_variables": {},
+   "exception": null,
+   "input_path": "__notebook__.ipynb",
+   "output_path": "__notebook__.ipynb",
+   "parameters": {},
+   "start_time": "2025-05-25T14:26:34.814084",
+   "version": "2.6.0"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
